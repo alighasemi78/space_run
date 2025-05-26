@@ -1,13 +1,26 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Temple Run</title>
+        <link rel="stylesheet" href="/src/style.css" />
+    </head>
+    <body>
+        <div id="score">Score: 0</div>
+        <div id="health-bar">
+            <div id="health-fill"></div>
+        </div>
+        <div id="start-screen" class="overlay">
+            <h1>Temple Run Clone</h1>
+            <p>Press any key to start</p>
+        </div>
+
+        <div id="game-over-screen" class="overlay" style="display: none">
+            <h1>Game Over</h1>
+            <p id="final-score">Score: 0</p>
+            <p>Press any key to restart</p>
+        </div>
+        <script type="module" src="/src/main.js"></script>
+    </body>
 </html>
