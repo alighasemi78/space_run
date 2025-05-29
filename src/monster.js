@@ -17,6 +17,8 @@ export class Monster {
             this.monsterGeometry,
             this.monsterMaterial
         );
+        this.monster.castShadow = true;
+        this.monster.receiveShadow = true;
         this.monster.position.set(0, 0.6, this.monsterOffsetZ); // Start behind the player
         this.scene.add(this.monster);
     }

@@ -25,13 +25,16 @@ export class Road {
     }
 
     createTiles() {
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 30; i++) {
             const row = [];
+            const rowHasObstacles = i > 0 && Math.random() < 0.2;
             for (let j = 0; j < 3; j++) {
                 const tile = new THREE.Mesh(
                     this.tileGeometry,
                     this.tileMaterial
                 );
+                tile.castShadow = true;
+                tile.receiveShadow = true;
                 tile.position.set(
                     j * this._tileWidth - this._tileWidth,
                     0,
@@ -39,13 +42,16 @@ export class Road {
                 );
                 tile.userData.isGap = false; // Initialize gap state
                 tile.visible = !tile.userData.isGap; // Initially visible
-                tile.userData.hasObstacle = i > 0 && Math.random() < 0.1;
+                tile.userData.hasObstacle =
+                    rowHasObstacles && Math.random() < 0.33;
 
                 if (tile.userData.hasObstacle) {
                     const obstacle = new THREE.Mesh(
                         this.obstacleGeometry,
                         this.obstacleMaterial
                     );
+                    obstacle.castShadow = true;
+                    obstacle.receiveShadow = true;
                     obstacle.position.set(
                         j * this._tileWidth - this._tileWidth,
                         0.6,
@@ -70,6 +76,7 @@ export class Road {
         // Move tiles forward to simulate motion
         this._tiles.forEach((row, i) => {
             const isGap = Math.random() < 0.1;
+            const rowHasObstacles = i > 0 && Math.random() < 0.2;
             row.forEach((tile) => {
                 tile.position.z += 0.1;
 
@@ -78,22 +85,30 @@ export class Road {
                 }
 
                 // Recycle tiles when they move behind the camera
-                if (tile.position.z > 5) {
-                    tile.position.z -= 10 * this._tileWidth;
+                if (tile.position.z > 20) {
+                    tile.position.z -= 30 * this._tileWidth;
 
                     // Make sure no two consecutive gaps
                     tile.userData.isGap =
                         (i == 0 || this._tiles[i - 1][0].visible) && isGap;
                     tile.visible = !tile.userData.isGap;
 
+                    if (tile.userData.hasObstacle) {
+                        this.scene.remove(tile.userData.obstacle);
+                    }
+
                     tile.userData.hasObstacle =
-                        !tile.userData.isGap && Math.random() < 0.1;
+                        !tile.userData.isGap &&
+                        rowHasObstacles &&
+                        Math.random() < 0.33;
 
                     if (tile.userData.hasObstacle) {
                         const obstacle = new THREE.Mesh(
                             this.obstacleGeometry,
                             this.obstacleMaterial
                         );
+                        obstacle.castShadow = true;
+                        obstacle.receiveShadow = true;
                         obstacle.position.set(
                             tile.position.x,
                             0.6,
