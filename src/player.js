@@ -23,16 +23,17 @@ export class Player {
     }
 
     createLeg(material, xPosition) {
-        const legWidth = 0.1;
+        const shinWidth = 0.1;
         const shinLength = 0.6;
         const shinAngle = -Math.PI / 6;
+        const thighWidth = 0.2;
         const thighLength = 0.4;
         const thighAngle = Math.PI / 6;
 
         const leg = new THREE.Group();
 
         const shin = new THREE.Mesh(
-            new THREE.BoxGeometry(legWidth, shinLength, legWidth),
+            new THREE.BoxGeometry(shinWidth, shinLength, shinWidth),
             material
         );
         shin.castShadow = true;
@@ -47,9 +48,10 @@ export class Player {
                 thighLength * Math.sin(thighAngle)
         );
 
+        const thighMaterial = new THREE.MeshStandardMaterial({ color: "red" });
         const thigh = new THREE.Mesh(
-            new THREE.BoxGeometry(legWidth, thighLength, legWidth),
-            material
+            new THREE.BoxGeometry(thighWidth, thighLength, thighWidth),
+            thighMaterial
         );
         thigh.castShadow = true;
         thigh.receiveShadow = true;
@@ -65,7 +67,7 @@ export class Player {
         leg.position.set(
             xPosition,
             shinLength * Math.cos(shinAngle) -
-                (legWidth / 2) * Math.sin(shinAngle) +
+                (shinWidth / 2) * Math.sin(shinAngle) +
                 thighLength * Math.cos(thighAngle),
             shinLength * Math.sin(shinAngle) +
                 thighLength * Math.sin(thighAngle)

@@ -4,18 +4,10 @@ import { Road } from "./road";
 import { Audio } from "./audio";
 import { Player } from "./player";
 import { HUD } from "./hud";
-import { Monster } from "./monster";
+import { Plane } from "./plane";
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb);
-
-const ambientLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-scene.add(ambientLight);
-
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(5, 10, 5);
-directionalLight.castShadow = true;
-scene.add(directionalLight);
+scene.fog = new THREE.Fog(0x000000, 10, 30); // adjust as needed
 
 const camera = new THREE.PerspectiveCamera(
     75,
@@ -52,7 +44,7 @@ const player = new Player(
     hud.updateHealthBar.bind(hud),
     hud.endGame.bind(hud)
 );
-const monster = new Monster(scene);
+const plane = new Plane(scene);
 
 window.addEventListener("keydown", (event) => {
     hud.updateScreen(audio.backgroundAudio, animate);
@@ -75,7 +67,7 @@ function animate() {
 
     road.update();
     player.update(road, audio.screamAudio, audio.hitAudio);
-    monster.update(player.player);
+    plane.update(player.player);
     hud.update();
 
     controls.update();
