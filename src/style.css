@@ -16,6 +16,24 @@ canvas {
   z-index: 1;
 }
 
+#jetPack-bar {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 20px;
+  border: 2px solid white;
+  background-color: #333;
+  z-index: 2;
+}
+#jetPack-fill {
+  height: 100%;
+  width: 100%;
+  background-color: white;
+  transition: width 0.3s ease;
+}
+
 #health-bar {
   position: absolute;
   top: 20px;

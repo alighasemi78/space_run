@@ -1,11 +1,15 @@
 import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 export class World {
     constructor() {
         this.fogConfig = {
             color: 0x000000,
-            near: 10,
+            near: 5,
             far: 30,
         };
         this.cameraConfig = {
@@ -24,12 +28,14 @@ export class World {
         this.createSky();
         this.createCamera();
         this.createRenderer();
+        // this.createComposer();
         this.createControls();
 
         window.addEventListener("resize", () => {
             this._camera.aspect = window.innerWidth / window.innerHeight;
             this._camera.updateProjectionMatrix();
             this._renderer.setSize(window.innerWidth, window.innerHeight);
+            // this._composer.setSize(window.innerWidth, window.innerHeight);
         });
     }
 
@@ -88,6 +94,20 @@ export class World {
         document.body.appendChild(this._renderer.domElement);
     }
 
+    createComposer() {
+        this._composer = new EffectComposer(this._renderer);
+        this._composer.addPass(new RenderPass(this._scene, this._camera));
+
+        const bloomPass = new UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            1,
+            0.01,
+            0.5
+        );
+        this._composer.addPass(bloomPass);
+        this._composer.addPass(new OutputPass());
+    }
+
     createControls() {
         this._controls = new OrbitControls(
             this._camera,
@@ -119,6 +139,10 @@ export class World {
         return this._scene;
     }
 
+    get skyTexture() {
+        return this._skyTexture;
+    }
+
     get camera() {
         return this._camera;
     }
@@ -127,11 +151,11 @@ export class World {
         return this._renderer;
     }
 
-    get controls() {
-        return this._controls;
+    get composer() {
+        return this._composer;
     }
 
-    get skyTexture() {
-        return this._skyTexture;
+    get controls() {
+        return this._controls;
     }
 }

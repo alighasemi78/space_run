@@ -11,6 +11,10 @@ export class HUD {
 
         this.maxHealth = 3;
         this.healthFill = document.getElementById("health-fill");
+
+        this.maxJetPackFuel = 5;
+        this.jetPackBar = document.getElementById("jetPack-bar");
+        this.jetPackFill = document.getElementById("jetPack-fill");
     }
 
     updateScreen(backgroundAudio, animate) {
@@ -31,6 +35,17 @@ export class HUD {
     updateHealthBar(health) {
         const percentage = (health / this.maxHealth) * 100;
         this.healthFill.style.width = percentage + "%";
+    }
+
+    updateJetPackBar(fuel) {
+        if (fuel >= this.maxJetPackFuel) {
+            this.jetPackBar.style.display = "none";
+        } else {
+            this.jetPackBar.style.display = "block";
+            const percentage =
+                ((this.maxJetPackFuel - fuel) / this.maxJetPackFuel) * 100;
+            this.jetPackFill.style.width = percentage + "%";
+        }
     }
 
     endGame() {

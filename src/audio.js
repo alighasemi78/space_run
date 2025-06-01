@@ -9,11 +9,7 @@ export class Audio {
         this.jumpAudioPath = this.audioDir + "/jump.mp3";
         this.hitAudioPath = this.audioDir + "/hit.mp3";
         this.screamAudioPath = this.audioDir + "/scream.mp3";
-
-        this._backgroundAudio = null;
-        this._jumpAudio = null;
-        this._hitAudio = null;
-        this._screamAudio = null;
+        this.jetpackAudioPath = this.audioDir + "/jetpack.mp3";
 
         this.loadAudio();
     }
@@ -48,6 +44,13 @@ export class Audio {
             this._screamAudio.setBuffer(buffer);
             this._screamAudio.setVolume(0.5);
         });
+
+        this._jetpackAudio = new THREE.Audio(listener);
+        audioLoader.load(this.jetpackAudioPath, (buffer) => {
+            this._jetpackAudio.setBuffer(buffer);
+            this._jetpackAudio.setLoop(true);
+            this._jetpackAudio.setVolume(0.5);
+        });
     }
 
     get backgroundAudio() {
@@ -64,5 +67,9 @@ export class Audio {
 
     get hitAudio() {
         return this._hitAudio;
+    }
+
+    get jetpackAudio() {
+        return this._jetpackAudio;
     }
 }

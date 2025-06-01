@@ -8,10 +8,11 @@ import { Plane } from "./plane";
 const world = new World();
 
 const scene = world.scene;
+const skyTexture = world.skyTexture;
 const camera = world.camera;
 const renderer = world.renderer;
+// const composer = world.composer;
 const controls = world.controls;
-const skyTexture = world.skyTexture;
 
 const hud = new HUD();
 const audio = new Audio(camera);
@@ -21,6 +22,7 @@ const player = new Player(
     road.tileWidth,
     audio,
     hud.updateHealthBar.bind(hud),
+    hud.updateJetPackBar.bind(hud),
     hud.endGame.bind(hud)
 );
 const plane = new Plane(scene, road.tileWidth, skyTexture);
@@ -38,6 +40,7 @@ function animate() {
 
     controls.update();
     renderer.render(scene, camera);
+    // composer.render();
 }
 
 renderer.render(scene, camera);

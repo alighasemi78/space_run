@@ -207,6 +207,13 @@ export class Plane {
     update(player) {
         this.propeller.rotation.z += 0.2;
 
+        const time = performance.now() * 0.005; // time in milliseconds → seconds
+        const swing = Math.sin(time * 1) * 0.1; // speed and amplitude
+
+        // Arms swing opposite to legs
+        this.plane.rotation.x = -swing;
+        this.plane.position.y -= swing * 0.1;
+
         const desiredZ = player.position.z + this.planeOffset;
         this.plane.position.z += (desiredZ - this.plane.position.z) * 0.05;
     }

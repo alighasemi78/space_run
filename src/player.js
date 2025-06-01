@@ -1,19 +1,31 @@
 import * as THREE from "three";
 
 export class Player {
-    constructor(scene, tileWidth, audio, updateHealthBar, endGame) {
+    constructor(
+        scene,
+        tileWidth,
+        audio,
+        updateHealthBar,
+        updateJetPackBar,
+        endGame
+    ) {
         this.scene = scene;
         this.tileWidth = tileWidth;
         this.audio = audio;
         this.updateHealthBar = updateHealthBar;
+        this.updateJetPackBar = updateJetPackBar;
         this.endGame = endGame;
 
         this.lane = 0;
 
         this.isJumping = false;
+        this.isSecondJumping = false;
         this.verticalVelocity = 0;
         this.gravity = -0.01;
         this.jumpVelocity = 0.3;
+
+        this.isFlying = false;
+        this.timeFlying = 0;
 
         this.health = 3; // Player's health
         this.maxHealth = 3; // Maximum health
@@ -36,7 +48,6 @@ export class Player {
             material
         );
         shin.castShadow = true;
-        shin.receiveShadow = true;
         shin.rotateX(shinAngle);
 
         shin.position.set(
@@ -53,7 +64,6 @@ export class Player {
             thighMaterial
         );
         thigh.castShadow = true;
-        thigh.receiveShadow = true;
         thigh.rotateX(thighAngle);
 
         thigh.position.set(
@@ -77,9 +87,9 @@ export class Player {
     }
 
     createTorso(leg) {
-        const torsoWidth = 0.5;
-        const torsoHeight = 0.8;
-        const torsoDepth = 0.3;
+        this.torsoWidth = 0.5;
+        this.torsoHeight = 0.8;
+        this.torsoDepth = 0.3;
 
         const legBox = new THREE.Box3().setFromObject(leg);
         const legSize = new THREE.Vector3();
@@ -88,21 +98,24 @@ export class Player {
         const material = new THREE.MeshStandardMaterial({ color: "blue" });
 
         const torso = new THREE.Mesh(
-            new THREE.BoxGeometry(torsoWidth, torsoHeight, torsoDepth),
+            new THREE.BoxGeometry(
+                this.torsoWidth,
+                this.torsoHeight,
+                this.torsoDepth
+            ),
             material
         );
         torso.castShadow = true;
-        torso.receiveShadow = true;
         torso.position.set(
             0,
-            legSize.y + torsoHeight / 2,
+            legSize.y + this.torsoHeight / 2,
             leg.userData.joint.z
         );
 
         return torso;
     }
 
-    createArm(material, xPosition, leg, torso) {
+    createArm(material, xPosition, leg) {
         const bicepWidth = 0.1;
         const bicepHeight = 0.4;
         const handAngle = Math.PI / 3;
@@ -111,10 +124,8 @@ export class Player {
         const legSize = new THREE.Vector3();
         legBox.getSize(legSize);
 
-        const torsoBox = new THREE.Box3().setFromObject(torso);
-        const torsoSize = new THREE.Vector3();
+        const torsoBox = new THREE.Box3().setFromObject(this.torso);
         const torsoCenter = new THREE.Vector3();
-        torsoBox.getSize(torsoSize);
         torsoBox.getCenter(torsoCenter);
 
         const arm = new THREE.Group();
@@ -124,7 +135,6 @@ export class Player {
             material
         );
         bicep.castShadow = true;
-        bicep.receiveShadow = true;
         bicep.position.set(0, -bicepHeight / 2, 0);
 
         const hand = new THREE.Mesh(
@@ -132,7 +142,6 @@ export class Player {
             material
         );
         hand.castShadow = true;
-        hand.receiveShadow = true;
         hand.rotateX(handAngle);
         hand.position.set(
             0,
@@ -141,12 +150,16 @@ export class Player {
         );
 
         arm.add(bicep, hand);
-        arm.position.set(xPosition, legSize.y + torsoSize.y, torsoCenter.z);
+        arm.position.set(
+            xPosition,
+            legSize.y + this.torsoHeight,
+            torsoCenter.z
+        );
 
         return arm;
     }
 
-    createHead(material, leg, torso) {
+    createHead(material, leg) {
         const headWidth = 0.3;
         const hairHeight = 0.05;
 
@@ -154,10 +167,8 @@ export class Player {
         const legSize = new THREE.Vector3();
         legBox.getSize(legSize);
 
-        const torsoBox = new THREE.Box3().setFromObject(torso);
-        const torsoSize = new THREE.Vector3();
+        const torsoBox = new THREE.Box3().setFromObject(this.torso);
         const torsoCenter = new THREE.Vector3();
-        torsoBox.getSize(torsoSize);
         torsoBox.getCenter(torsoCenter);
 
         const head = new THREE.Group();
@@ -167,7 +178,6 @@ export class Player {
             material
         );
         face.castShadow = true;
-        face.receiveShadow = true;
         face.position.set(0, 0, 0);
 
         const hairMaterial = new THREE.MeshStandardMaterial({
@@ -179,13 +189,12 @@ export class Player {
             hairMaterial
         );
         hair.castShadow = true;
-        hair.receiveShadow = true;
         hair.position.set(0, headWidth / 2 + hairHeight / 2, 0);
 
         head.add(hair, face);
         head.position.set(
             0,
-            legSize.y + torsoSize.y + headWidth / 2,
+            legSize.y + this.torsoHeight + headWidth / 2,
             torsoCenter.z
         );
 
@@ -202,16 +211,16 @@ export class Player {
         this.leftLeg = this.createLeg(bodyMaterial, 0.15);
         this.rightLeg = this.createLeg(bodyMaterial, -0.15);
 
-        const torso = this.createTorso(this.leftLeg);
+        this.torso = this.createTorso(this.leftLeg);
 
-        this.leftArm = this.createArm(bodyMaterial, -0.35, this.leftLeg, torso);
-        this.rightArm = this.createArm(bodyMaterial, 0.35, this.leftLeg, torso);
+        this.leftArm = this.createArm(bodyMaterial, -0.35, this.leftLeg);
+        this.rightArm = this.createArm(bodyMaterial, 0.35, this.leftLeg);
 
-        const head = this.createHead(bodyMaterial, this.leftLeg, torso);
+        const head = this.createHead(bodyMaterial, this.leftLeg);
 
         this._player.add(
             head,
-            torso,
+            this.torso,
             this.leftArm,
             this.rightArm,
             this.leftLeg,
@@ -231,7 +240,11 @@ export class Player {
     }
 
     jump() {
-        if (!this.isJumping) {
+        if (!this.isFlying && !this.isSecondJumping) {
+            if (this.isJumping) {
+                this.isSecondJumping = true;
+                this.secondJumpStartY = this._player.position.y;
+            }
             this.verticalVelocity = this.jumpVelocity;
             this.isJumping = true;
             if (this.audio.jumpAudio.isPlaying) this.audio.jumpAudio.stop();
@@ -245,7 +258,7 @@ export class Player {
         }
     }
 
-    handlePlayerHit(obstacle) {
+    handlePlayerHit() {
         if (!this.audio.hitAudio.isPlaying) this.audio.hitAudio.play();
         this.health--;
         this.updateHealthBar(this.health);
@@ -266,18 +279,6 @@ export class Player {
             }
         }, flashInterval);
 
-        // Animate obstacle to fall (rotate)
-        const fallSpeed = 0.05;
-        let angle = 0;
-        const fallTimer = setInterval(() => {
-            if (angle >= Math.PI / 2) {
-                clearInterval(fallTimer);
-                return;
-            }
-            obstacle.rotation.z += fallSpeed;
-            angle += fallSpeed;
-        }, 16);
-
         // Check for death
         if (this.health <= 0) {
             console.log("💀 Monster caught the player!");
@@ -285,7 +286,25 @@ export class Player {
         }
     }
 
+    handleJetPack(jetPack) {
+        if (!this.isFlying) {
+            this.isFlying = true;
+            this.jetPack = jetPack.clone();
+            this.scene.remove(jetPack);
+            this.scene.add(this.jetPack);
+            this.audio.jetpackAudio.play();
+        }
+    }
+
     update(road) {
+        if (this.timeFlying >= 5) {
+            this.updateJetPackBar(this.timeFlying);
+            this.isFlying = false;
+            this.timeFlying = 0;
+            this.scene.remove(this.jetPack);
+            this.audio.jetpackAudio.stop();
+        }
+
         // Smooth lane transition (optional)
         const targetX = this.lane * this.tileWidth;
         this._player.position.x += (targetX - this._player.position.x) * 0.2;
@@ -295,14 +314,39 @@ export class Player {
             this._player.position.y += this.verticalVelocity;
             this.verticalVelocity += this.gravity;
         } else {
-            const time = performance.now() * 0.005; // time in milliseconds → seconds
-            const swing = Math.sin(time * 3) * 1; // speed and amplitude
+            if (this.isFlying) {
+                this.leftArm.rotation.x = 0;
+                this.rightArm.rotation.x = 0;
+                this.leftLeg.rotation.x = 0;
+                this.rightLeg.rotation.x = 0;
+            } else {
+                const time = performance.now() * 0.005; // time in milliseconds → seconds
+                const swing = Math.sin(time * 3) * 1; // speed and amplitude
 
-            // Arms swing opposite to legs
-            this.leftArm.rotation.x = swing;
-            this.rightArm.rotation.x = -swing;
-            this.leftLeg.rotation.x = swing;
-            this.rightLeg.rotation.x = -swing;
+                // Arms swing opposite to legs
+                this.leftArm.rotation.x = swing;
+                this.rightArm.rotation.x = -swing;
+                this.leftLeg.rotation.x = swing;
+                this.rightLeg.rotation.x = -swing;
+            }
+        }
+
+        if (this.isFlying) {
+            this.updateJetPackBar(this.timeFlying);
+            this._player.position.y += (4 - this._player.position.y) * 0.05;
+
+            const torsoBox = new THREE.Box3().setFromObject(this.torso);
+            const torsoCenter = new THREE.Vector3();
+            torsoBox.getCenter(torsoCenter);
+
+            this.jetPack.position.set(
+                torsoCenter.x,
+                torsoCenter.y,
+                torsoCenter.z + this.torsoDepth / 2 + 0.1
+            );
+            this.jetPack.rotation.y = 0;
+
+            this.timeFlying += 0.01;
         }
 
         const tile = road.getTileAt(
@@ -318,8 +362,9 @@ export class Player {
                 this._player.position.y = 0;
                 this.verticalVelocity = 0;
                 this.isJumping = false;
+                this.isSecondJumping = false;
             }
-        } else {
+        } else if (!this.isFlying) {
             this.isJumping = true;
         }
 
@@ -338,6 +383,8 @@ export class Player {
             this.handlePlayerHit.bind(this),
             this.audio.hitAudio
         );
+
+        road.checkJetPack(this.playerBox, this.handleJetPack.bind(this));
     }
 
     get player() {
