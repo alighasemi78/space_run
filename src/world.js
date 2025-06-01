@@ -50,7 +50,7 @@ export class World {
 
     createSky() {
         const loader = new THREE.CubeTextureLoader();
-        loader.setPath("./assets/textures/sky/");
+        loader.setPath("/assets/textures/sky/");
 
         const skies = [
             "dark-s_nx.jpg",
