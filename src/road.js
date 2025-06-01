@@ -1,8 +1,9 @@
 import * as THREE from "three";
 
 export class Road {
-    constructor(scene) {
+    constructor(scene, skyTexture) {
         this.scene = scene;
+        this.skyTexture = skyTexture;
 
         this._tileWidth = 2; // Width of each tile
 
@@ -12,11 +13,19 @@ export class Road {
             this._tileWidth
         );
         this.tileMaterial = new THREE.MeshStandardMaterial({
-            color: 0x555555,
+            color: "white",
+            envMap: this.skyTexture,
+            metalness: 0.9,
+            roughness: 0.1,
+            envMapIntensity: 10,
         });
         this.obstacleGeometry = new THREE.BoxGeometry(1, 1, 1);
         this.obstacleMaterial = new THREE.MeshStandardMaterial({
             color: 0x00ff00,
+            envMap: this.skyTexture,
+            metalness: 0.9,
+            roughness: 0.1,
+            envMapIntensity: 10,
         });
 
         this._tiles = [];
@@ -168,10 +177,6 @@ export class Road {
 
     get tiles() {
         return this._tiles;
-    }
-
-    get obstacles() {
-        return this._obstacles;
     }
 
     get tileWidth() {

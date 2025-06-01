@@ -6,7 +6,6 @@ export class HUD {
         this.startScreen = document.getElementById("start-screen");
         this.gameOverScreen = document.getElementById("game-over-screen");
         this.finalScoreText = document.getElementById("final-score");
-        this.startScreen.style.display = "none"; // Hide start menu
         this.score = 0;
         this.scoreDisplay = document.getElementById("score");
 

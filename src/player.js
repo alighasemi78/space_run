@@ -1,13 +1,12 @@
 import * as THREE from "three";
 
 export class Player {
-    constructor(scene, tileWidth, updateHealthBar, endGame) {
+    constructor(scene, tileWidth, audio, updateHealthBar, endGame) {
         this.scene = scene;
         this.tileWidth = tileWidth;
+        this.audio = audio;
         this.updateHealthBar = updateHealthBar;
         this.endGame = endGame;
-        this._player = null;
-        this.playerBox = null;
 
         this.lane = 0;
 
@@ -231,12 +230,12 @@ export class Player {
         this.lane = Math.min(this.lane, 1);
     }
 
-    jump(jumpAudio) {
+    jump() {
         if (!this.isJumping) {
             this.verticalVelocity = this.jumpVelocity;
             this.isJumping = true;
-            if (jumpAudio.isPlaying) jumpAudio.stop();
-            jumpAudio.play();
+            if (this.audio.jumpAudio.isPlaying) this.audio.jumpAudio.stop();
+            this.audio.jumpAudio.play();
         }
     }
 
@@ -246,8 +245,8 @@ export class Player {
         }
     }
 
-    handlePlayerHit(obstacle, hitAudio) {
-        if (!hitAudio.isPlaying) hitAudio.play();
+    handlePlayerHit(obstacle) {
+        if (!this.audio.hitAudio.isPlaying) this.audio.hitAudio.play();
         this.health--;
         this.updateHealthBar(this.health);
 
@@ -286,7 +285,7 @@ export class Player {
         }
     }
 
-    update(road, screamAudio, hitAudio) {
+    update(road) {
         // Smooth lane transition (optional)
         const targetX = this.lane * this.tileWidth;
         this._player.position.x += (targetX - this._player.position.x) * 0.2;
@@ -326,7 +325,8 @@ export class Player {
 
         // Game over if fallen too far
         if (this._player.position.y < -0.5) {
-            if (!screamAudio.isPlaying) screamAudio.play();
+            if (!this.audio.screamAudio.isPlaying)
+                this.audio.screamAudio.play();
             this.endGame();
         }
 
@@ -336,7 +336,7 @@ export class Player {
         road.checkCollision(
             this.playerBox,
             this.handlePlayerHit.bind(this),
-            hitAudio
+            this.audio.hitAudio
         );
     }
 

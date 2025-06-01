@@ -1,9 +1,12 @@
 import * as THREE from "three";
 
 export class Plane {
-    constructor(scene) {
+    constructor(scene, tileWidth, skyTexture) {
         this.scene = scene;
-        this.planeOffsetZ = 5;
+        this.tileWidth = tileWidth;
+        this.skyTexture = skyTexture;
+
+        this.planeOffset = 5;
         this.plane = null;
         this.createPlane();
     }
@@ -148,7 +151,7 @@ export class Plane {
         bodyBox.getSize(bodySize);
         bodyBox.getCenter(bodyCenter);
 
-        const flashlight = new THREE.DirectionalLight(0xffffff, 1);
+        const flashlight = new THREE.DirectionalLight(0xffffff, 3.5);
         flashlight.castShadow = true;
 
         flashlight.position.set(
@@ -156,37 +159,25 @@ export class Plane {
             bodyCenter.y - bodySize.y / 2,
             bodyCenter.z - bodySize.z / 2
         );
-        flashlight.target.position.set(0, -5, -this.planeOffsetZ + 1); // pointing slightly downward and forward
-
-        const beamGeometry = new THREE.ConeGeometry(1, 10, 32, 1, true);
-        const beamMaterial = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0.2,
-            side: THREE.DoubleSide,
-            depthWrite: false,
-        });
-        const beam = new THREE.Mesh(beamGeometry, beamMaterial);
-
-        // Point it downward/forward
-        beam.rotation.x = Math.PI / 4;
-
-        // Move it in front of the plane's nose
-        beam.position.set(
+        flashlight.target.position.set(
             bodyCenter.x,
-            bodyCenter.y - bodySize.y / 2,
-            bodyCenter.z - bodySize.z / 2
-        );
+            bodyCenter.y - this.planeOffset,
+            bodyCenter.z - this.planeOffset + 3 * this.tileWidth
+        ); // pointing slightly downward and forward
 
-        return { flashlight, beam };
+        return flashlight;
     }
 
     createPlane() {
         this.plane = new THREE.Group();
 
         const bodyMaterial = new THREE.MeshStandardMaterial({
-            color: "brown",
+            color: "yellow",
             side: THREE.DoubleSide,
+            envMap: this.skyTexture,
+            metalness: 0.9,
+            roughness: 0.1,
+            envMapIntensity: 10,
         });
 
         const body = this.createBody(bodyMaterial);
@@ -196,7 +187,7 @@ export class Plane {
         const topTail = this.createTail(body, bodyMaterial, "top");
         const rightTail = this.createTail(body, bodyMaterial, "right");
         const leftTail = this.createTail(body, bodyMaterial, "left");
-        const { flashlight, beam } = this.createFlashlight(body);
+        const flashlight = this.createFlashlight(body);
 
         this.plane.add(
             body,
@@ -206,10 +197,9 @@ export class Plane {
             topTail,
             rightTail,
             leftTail,
-            flashlight,
-            beam
+            flashlight
         );
-        this.plane.position.set(0, 5, this.planeOffsetZ);
+        this.plane.position.set(0, this.planeOffset, this.planeOffset);
 
         this.scene.add(this.plane);
     }
@@ -217,7 +207,7 @@ export class Plane {
     update(player) {
         this.propeller.rotation.z += 0.2;
 
-        const desiredZ = player.position.z + this.planeOffsetZ;
+        const desiredZ = player.position.z + this.planeOffset;
         this.plane.position.z += (desiredZ - this.plane.position.z) * 0.05;
     }
 }
