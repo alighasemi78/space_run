@@ -4,7 +4,7 @@ export class Audio {
     constructor(camera) {
         this.camera = camera;
 
-        this.audioDir = "../assets/audio";
+        this.audioDir = "/assets/audio";
         this.backgroundAudioPath = this.audioDir + "/background.mp3";
         this.jumpAudioPath = this.audioDir + "/jump.mp3";
         this.hitAudioPath = this.audioDir + "/hit.mp3";
