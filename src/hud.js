@@ -17,9 +17,10 @@ export class HUD {
         this.jetPackFill = document.getElementById("jetPack-fill");
     }
 
-    updateScreen(backgroundAudio, animate) {
+    updateScreen(backgroundAudio, animate, world) {
         if (!this.gameStarted) {
             this.gameStarted = true;
+            world.startTime = Date.now();
             backgroundAudio.play();
             this.startScreen.style.display = "none"; // Hide start menu
             animate();
@@ -56,8 +57,8 @@ export class HUD {
         this.gameOverScreen.style.display = "flex";
     }
 
-    update() {
-        this.score += 0.01;
+    update(elapsedSeconds) {
+        this.score = elapsedSeconds;
         this.scoreDisplay.textContent = "Score: " + Math.floor(this.score);
     }
 

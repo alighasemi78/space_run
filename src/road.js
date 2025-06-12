@@ -8,6 +8,44 @@ export class Road {
         this.roadLength = 20;
         this._tiles = [];
 
+        this.easyMode = {
+            avgGapInterval: 10.0,
+            avgJetPackInterval: 15.0,
+            avgObstaclesInterval: 5.0,
+        };
+
+        this.mediumMode = {
+            avgGapInterval: 7.0,
+            avgJetPackInterval: 20.0,
+            avgObstaclesInterval: 2.0,
+        };
+
+        this.hardMode = {
+            avgGapInterval: 5.0,
+            avgJetPackInterval: 25.0,
+            avgObstaclesInterval: 1.0,
+        };
+
+        this.lastGapTime = 0;
+        this.nextGapIn = this.sampleNextTime(this.easyMode.avgGapInterval);
+        this.isGapFrame = false;
+        this.gapTilesRemaining = 0;
+
+        this.lastJetPackTime = 0;
+        this.nextJetPackIn = this.sampleNextTime(
+            this.easyMode.avgJetPackInterval
+        );
+        this.isJetPackFrame = false;
+        this.jetPackTile = 0;
+
+        this.lastObstaclesTime = 0;
+        this.nextObstaclesIn = this.sampleNextTime(
+            this.easyMode.avgObstaclesInterval
+        );
+        this.isObstaclesFrame = false;
+        this.obstaclesTiles = [];
+        this.obstaclesTilesRemaining = 0;
+
         this.sampleTile = this.createSampleTile();
         this.sampleLaserGate = this.createSampleLaserGate();
         this.sampleMeteorite = this.createSampleMeteorite();
@@ -32,8 +70,6 @@ export class Road {
         const tile = new THREE.Mesh(tileGeometry, tileMaterial);
         tile.receiveShadow = true;
         tile.position.set(0, 0, 0);
-        tile.userData.isGap = false; // Initialize gap state
-        tile.visible = !tile.userData.isGap; // Initially visible
 
         return tile;
     }
@@ -181,7 +217,6 @@ export class Road {
     createTiles() {
         for (let i = 0; i < this.roadLength; i++) {
             const row = [];
-            const rowHasObstacles = i > 0 && Math.random() < 0.2;
             for (let j = 0; j < 3; j++) {
                 const tile = this.sampleTile.clone();
                 tile.position.set(
@@ -189,20 +224,9 @@ export class Road {
                     0,
                     -i * this._tileWidth
                 );
+                tile.visible = true;
                 tile.userData.hasJetPack = false;
-                tile.userData.isGap = false; // Initialize gap state
-                tile.visible = !tile.userData.isGap; // Initially visible
-                tile.userData.hasObstacle =
-                    rowHasObstacles && Math.random() < 0.33;
-
-                if (tile.userData.hasObstacle) {
-                    const obstacle = this.createObstacle(
-                        j * this._tileWidth - this._tileWidth,
-                        -i * this._tileWidth
-                    );
-                    tile.userData.obstacle = obstacle;
-                    this.scene.add(obstacle);
-                }
+                tile.userData.hasObstacle = false;
 
                 row.push(tile);
                 this.scene.add(tile);
@@ -211,15 +235,60 @@ export class Road {
         }
     }
 
-    update() {
-        const hasJetPack = Math.random() < 0.05;
-        let jetPackUsed = false;
+    sampleNextTime(avgInterval) {
+        return -Math.log(1 - Math.random()) * avgInterval;
+    }
 
-        // Move tiles forward to simulate motion
-        this._tiles.forEach((row, i) => {
-            const isGap = Math.random() < 0.1;
-            const rowHasObstacles = i > 0 && Math.random() < 0.2;
-            row.forEach((tile) => {
+    update(elapsedSeconds) {
+        let intervals = {
+            avgGapInterval: 0,
+            avgJetPackInterval: 0,
+            avgObstaclesInterval: 0,
+        };
+
+        if (elapsedSeconds < 60) {
+            intervals = this.easyMode;
+        } else if (elapsedSeconds < 120) {
+            intervals = this.mediumMode;
+        } else {
+            intervals = this.hardMode;
+        }
+
+        if (elapsedSeconds - this.lastGapTime >= this.nextGapIn) {
+            this.isGapFrame = true;
+            this.lastGapTime = elapsedSeconds;
+            this.nextGapIn = this.sampleNextTime(intervals.avgGapInterval);
+            this.gapTilesRemaining = 3;
+        }
+
+        if (elapsedSeconds - this.lastJetPackTime >= this.nextJetPackIn) {
+            this.isJetPackFrame = true;
+            this.lastJetPackTime = elapsedSeconds;
+            this.nextJetPackIn = this.sampleNextTime(
+                intervals.avgJetPackInterval
+            );
+            this.jetPackTile = Math.floor(Math.random() * 3);
+        }
+
+        console.log(
+            elapsedSeconds - this.lastObstaclesTime,
+            this.nextObstaclesIn
+        );
+        if (elapsedSeconds - this.lastObstaclesTime >= this.nextObstaclesIn) {
+            this.isObstaclesFrame = true;
+            this.lastObstaclesTime = elapsedSeconds;
+            this.nextObstaclesIn = this.sampleNextTime(
+                intervals.avgObstaclesInterval
+            );
+            this.obstaclesTiles = Array.from(
+                { length: 3 },
+                () => Math.random() < 0.5
+            );
+            this.obstaclesTilesRemaining = 3;
+        }
+
+        this._tiles.forEach((row) => {
+            row.forEach((tile, i) => {
                 tile.position.z += 0.1;
 
                 if (tile.userData.hasJetPack) {
@@ -231,27 +300,30 @@ export class Road {
                     tile.userData.obstacle.position.z += 0.1;
                 }
 
-                // Recycle tiles when they move behind the camera
                 if (tile.position.z > 20) {
                     tile.position.z -= this.roadLength * this._tileWidth;
 
-                    // Make sure no two consecutive gaps
-                    tile.userData.isGap =
-                        (i == 0 || this._tiles[i - 1][0].visible) && isGap;
-                    tile.visible = !tile.userData.isGap;
+                    if (this.isGapFrame && this.gapTilesRemaining > 0) {
+                        tile.visible = false;
+                        this.gapTilesRemaining--;
+                        if (this.gapTilesRemaining === 0) {
+                            this.isGapFrame = false;
+                        }
+                    } else {
+                        tile.visible = true;
+                    }
 
                     if (tile.userData.hasJetPack) {
                         this.scene.remove(tile.userData.jetPack);
                     }
 
-                    tile.userData.hasJetPack =
-                        !tile.userData.isGap &&
-                        hasJetPack &&
-                        !jetPackUsed &&
-                        Math.random() < 0.33;
-
-                    if (tile.userData.hasJetPack) {
-                        jetPackUsed = true;
+                    if (
+                        tile.visible &&
+                        this.isJetPackFrame &&
+                        this.jetPackTile === i
+                    ) {
+                        tile.userData.hasJetPack = true;
+                        this.isJetPackFrame = false;
 
                         const jetPack = this.createJetPack(
                             tile.position.x,
@@ -259,25 +331,35 @@ export class Road {
                         );
                         tile.userData.jetPack = jetPack;
                         this.scene.add(jetPack);
+                    } else {
+                        tile.userData.hasJetPack = false;
                     }
 
                     if (tile.userData.hasObstacle) {
                         this.scene.remove(tile.userData.obstacle);
                     }
 
-                    tile.userData.hasObstacle =
+                    if (
+                        tile.visible &&
                         !tile.userData.hasJetPack &&
-                        !tile.userData.isGap &&
-                        rowHasObstacles &&
-                        Math.random() < 0.33;
+                        this.isObstaclesFrame &&
+                        this.obstaclesTilesRemaining > 0
+                    ) {
+                        if (this.obstaclesTiles[i]) {
+                            tile.userData.hasObstacle = true;
 
-                    if (tile.userData.hasObstacle) {
-                        const obstacle = this.createObstacle(
-                            tile.position.x,
-                            tile.position.z
-                        );
-                        tile.userData.obstacle = obstacle;
-                        this.scene.add(obstacle);
+                            const obstacle = this.createObstacle(
+                                tile.position.x,
+                                tile.position.z
+                            );
+                            tile.userData.obstacle = obstacle;
+                            this.scene.add(obstacle);
+                        }
+
+                        this.obstaclesTilesRemaining--;
+                        if (this.obstaclesTilesRemaining === 0) {
+                            this.isObstaclesFrame = false;
+                        }
                     }
                 }
             });

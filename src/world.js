@@ -1,51 +1,24 @@
 import * as THREE from "three";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 export class World {
     constructor() {
-        this.fogConfig = {
-            color: 0x000000,
-            near: 5,
-            far: 30,
-        };
-        this.cameraConfig = {
-            fov: 75,
-            aspect: window.innerWidth / window.innerHeight,
-            near: 0.1,
-            far: 1000,
-            position: {
-                x: 8,
-                y: 6,
-                z: 6,
-            },
-        };
-
         this.createScene();
         this.createSky();
         this.createCamera();
         this.createRenderer();
-        // this.createComposer();
         this.createControls();
 
         window.addEventListener("resize", () => {
             this._camera.aspect = window.innerWidth / window.innerHeight;
             this._camera.updateProjectionMatrix();
             this._renderer.setSize(window.innerWidth, window.innerHeight);
-            // this._composer.setSize(window.innerWidth, window.innerHeight);
         });
     }
 
     createScene() {
         this._scene = new THREE.Scene();
-        this._scene.fog = new THREE.Fog(
-            this.fogConfig.color,
-            this.fogConfig.near,
-            this.fogConfig.far
-        );
+        this._scene.fog = new THREE.Fog("black", 5, 40);
     }
 
     createSky() {
@@ -70,20 +43,23 @@ export class World {
             // Apply it to the scene background or an object
             scene.background = texture;
         });
+
+        const moonLight = new THREE.DirectionalLight(0x9999ff, 10); // soft blue light
+        moonLight.position.set(-50, 50, -100);
+        this._scene.add(moonLight);
+
+        // const moonLightHelper = new THREE.DirectionalLightHelper(moonLight, 5);
+        // this._scene.add(moonLightHelper);
     }
 
     createCamera() {
         this._camera = new THREE.PerspectiveCamera(
-            this.cameraConfig.fov,
-            this.cameraConfig.aspect,
-            this.cameraConfig.near,
-            this.cameraConfig.far
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
         );
-        this._camera.position.set(
-            this.cameraConfig.position.x,
-            this.cameraConfig.position.y,
-            this.cameraConfig.position.z
-        );
+        this._camera.position.set(8, 8, 8);
     }
 
     createRenderer() {
@@ -92,20 +68,6 @@ export class World {
         this._renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this._renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this._renderer.domElement);
-    }
-
-    createComposer() {
-        this._composer = new EffectComposer(this._renderer);
-        this._composer.addPass(new RenderPass(this._scene, this._camera));
-
-        const bloomPass = new UnrealBloomPass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight),
-            1,
-            0.01,
-            0.5
-        );
-        this._composer.addPass(bloomPass);
-        this._composer.addPass(new OutputPass());
     }
 
     createControls() {
@@ -120,7 +82,7 @@ export class World {
 
     handleKeyPress(animate, hud, audio, player) {
         window.addEventListener("keydown", (event) => {
-            hud.updateScreen(audio.backgroundAudio, animate);
+            hud.updateScreen(audio.backgroundAudio, animate, this);
 
             // Handle lane movement after game starts
             if (event.code === "ArrowLeft") {
@@ -133,6 +95,10 @@ export class World {
                 player.stopJump();
             }
         });
+    }
+
+    getElapsedSeconds() {
+        return Math.floor((Date.now() - this._startTime) / 1000);
     }
 
     get scene() {
@@ -151,11 +117,11 @@ export class World {
         return this._renderer;
     }
 
-    get composer() {
-        return this._composer;
-    }
-
     get controls() {
         return this._controls;
+    }
+
+    set startTime(value) {
+        this._startTime = value;
     }
 }

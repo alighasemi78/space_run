@@ -5,8 +5,9 @@ export class Plane {
         this.scene = scene;
         this.tileWidth = tileWidth;
         this.skyTexture = skyTexture;
+        this._gunReady = false;
 
-        this.planeOffset = 5;
+        this.planeOffset = 6;
         this.plane = null;
         this.createPlane();
     }
@@ -151,19 +152,31 @@ export class Plane {
         bodyBox.getSize(bodySize);
         bodyBox.getCenter(bodyCenter);
 
-        const flashlight = new THREE.DirectionalLight(0xffffff, 3.5);
-        flashlight.castShadow = true;
+        const flashlight = new THREE.SpotLight(0xffffff, 250);
 
         flashlight.position.set(
             bodyCenter.x,
             bodyCenter.y - bodySize.y / 2,
             bodyCenter.z - bodySize.z / 2
         );
+        flashlight.position.set(0, 5, 5);
         flashlight.target.position.set(
             bodyCenter.x,
             bodyCenter.y - this.planeOffset,
-            bodyCenter.z - this.planeOffset + 3 * this.tileWidth
+            bodyCenter.z - this.planeOffset - 10 * this.tileWidth
         ); // pointing slightly downward and forward
+
+        flashlight.angle = Math.PI / 4;
+        flashlight.penumbra = 0.2; // softness at the edge
+        flashlight.decay = 2; // how quickly it fades
+        flashlight.distance = Math.sqrt(
+            (bodyCenter.y - this.planeOffset) ** 2 +
+                (bodyCenter.z - this.planeOffset - 10 * this.tileWidth) ** 2
+        ); // max distance of light
+        flashlight.castShadow = true;
+
+        // const spotlightHelper = new THREE.SpotLightHelper(flashlight);
+        // this.scene.add(spotlightHelper);
 
         return flashlight;
     }
@@ -196,12 +209,12 @@ export class Plane {
             leftWing,
             topTail,
             rightTail,
-            leftTail,
-            flashlight
+            leftTail
         );
         this.plane.position.set(0, this.planeOffset, this.planeOffset);
 
         this.scene.add(this.plane);
+        this.scene.add(flashlight);
     }
 
     update(player) {
@@ -216,5 +229,9 @@ export class Plane {
 
         const desiredZ = player.position.z + this.planeOffset;
         this.plane.position.z += (desiredZ - this.plane.position.z) * 0.05;
+    }
+
+    get gunReady() {
+        return this._gunReady;
     }
 }

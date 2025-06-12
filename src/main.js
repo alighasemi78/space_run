@@ -33,10 +33,12 @@ function animate() {
     if (hud.isGameOver) return;
     requestAnimationFrame(animate);
 
-    road.update();
+    const elapsedSeconds = world.getElapsedSeconds();
+
+    road.update(elapsedSeconds);
     player.update(road);
     plane.update(player.player);
-    hud.update();
+    hud.update(elapsedSeconds);
 
     controls.update();
     renderer.render(scene, camera);

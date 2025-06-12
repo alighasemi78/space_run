@@ -6,6 +6,10 @@ canvas {
     display: block;
 }
 
+.lil-gui {
+  top: 50px !important;
+}
+
 #score {
   position: absolute;
   top: 20px;
@@ -49,6 +53,28 @@ canvas {
   width: 100%;
   background-color: #e74c3c;
   transition: width 0.3s ease;
+}
+
+#guide {
+  position: absolute;
+  top: 50px;
+  left: 20px;
+  color: white;
+  font-size: 18px;
+  font-family: sans-serif;
+  z-index: 1;
+}
+
+#gunReady {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 24px;
+  font-family: sans-serif;
+  z-index: 1;
 }
 
 .overlay {
