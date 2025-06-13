@@ -1,15 +1,28 @@
 import * as THREE from "three";
+import { Bullet } from "./bullet";
 
 export class Plane {
-    constructor(scene, tileWidth, skyTexture) {
+    constructor(scene, audio, tileWidth, skyTexture, updateGunReadyText) {
         this.scene = scene;
+        this.audio = audio;
         this.tileWidth = tileWidth;
         this.skyTexture = skyTexture;
-        this._gunReady = false;
+        this.updateGunReadyText = updateGunReadyText;
 
         this.planeOffset = 6;
         this.plane = null;
         this.createPlane();
+
+        this._gunReady = false;
+        this.maxBullets = 10;
+        this.bullets = [];
+        this.bulletBar = document.getElementById("bullet-bar");
+        for (let i = 0; i < this.maxBullets; i++) {
+            const bullet = document.createElement("div");
+            bullet.className = "bullet";
+            bullet.style.width = `${100 / this.maxBullets - 1}%`;
+            this.bulletBar.appendChild(bullet);
+        }
     }
 
     createBody(material) {
@@ -217,7 +230,50 @@ export class Plane {
         this.scene.add(flashlight);
     }
 
-    update(player) {
+    fireBullet() {
+        console.log(this.bullets.length);
+        if (this.bullets.length < this.maxBullets) {
+            this.audio.gunShotAudio.stop();
+            this.audio.gunShotAudio.play();
+
+            const bullet = new Bullet(this.scene, this.plane.position);
+            this.bullets.push(bullet);
+
+            this.bulletBar.children[
+                this.maxBullets - this.bullets.length
+            ].style.background = "transparent";
+        }
+    }
+
+    update(player, road, elapsedSeconds) {
+        if (elapsedSeconds > 0 && elapsedSeconds % 30 == 0) {
+            if (!this._gunReady) {
+                this._gunReady = true;
+                this.audio.gunReadyAudio.stop();
+                this.audio.gunReadyAudio.play();
+
+                Array.from(this.bulletBar.children).forEach((child) => {
+                    child.style.background = "yellow";
+                });
+            }
+        } else {
+            if (this.bullets.length >= this.maxBullets) {
+                this._gunReady = false;
+
+                let counter = 0;
+                this.bullets.forEach((bullet) => {
+                    if (bullet.isOutOfBounds()) {
+                        counter++;
+                    }
+                });
+
+                if (counter >= this.maxBullets) {
+                    this.bullets = [];
+                }
+            }
+        }
+        this.updateGunReadyText(this._gunReady);
+
         this.propeller.rotation.z += 0.2;
 
         const time = performance.now() * 0.005; // time in milliseconds → seconds
@@ -229,6 +285,16 @@ export class Plane {
 
         const desiredZ = player.position.z + this.planeOffset;
         this.plane.position.z += (desiredZ - this.plane.position.z) * 0.05;
+
+        const desiredX = player.position.x;
+        this.plane.position.x += (desiredX - this.plane.position.x) * 0.05;
+
+        this.bullets.forEach((bullet, index) => {
+            bullet.update(road);
+            if (bullet.isOutOfBounds()) {
+                this.scene.remove(bullet.mesh);
+            }
+        });
     }
 
     get gunReady() {

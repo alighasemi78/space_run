@@ -7,19 +7,29 @@
         <link rel="stylesheet" href="/src/style.css" />
     </head>
     <body>
-        <div id="score">Score: 0</div>
-        <div id="jetPack-bar" style="display: none">
-            <div id="jetPack-fill"></div>
+        <div id="score" class="text">Score: 0</div>
+        <div id="bullets">
+            <div class="text">Bullets:</div>
+            <div id="bullet-bar"></div>
         </div>
-        <div id="health-bar">
-            <div id="health-fill"></div>
+        <div id="jetPack" style="display: none">
+            <div class="text">Jet Pack Fuel:</div>
+            <div id="jetPack-bar">
+                <div id="jetPack-fill"></div>
+            </div>
+        </div>
+        <div id="health">
+            <div class="text">Health:</div>
+            <div id="health-bar">
+                <div id="health-fill"></div>
+            </div>
         </div>
         <div id="guide">
             <p>Use &#8592; and &#8594; to move and &#8593; to jump</p>
             <p>Press space to shoot</p>
             <p>Avoid asteroids, laser beams, and gaps</p>
         </div>
-        <div id="gunReady">Press space to shoot!</div>
+        <div id="gunReady" class="text">Press space to shoot!</div>
         <div id="start-screen" class="overlay">
             <h1>Space Run</h1>
             <p>Press any key to start</p>

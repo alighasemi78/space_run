@@ -28,7 +28,6 @@ export class Player {
         this.timeFlying = 0;
 
         this.health = 3; // Player's health
-        this.maxHealth = 3; // Maximum health
 
         this.createPlayer();
     }
@@ -292,7 +291,7 @@ export class Player {
             this.jetPack = jetPack.clone();
             this.scene.remove(jetPack);
             this.scene.add(this.jetPack);
-            this.audio.jetpackAudio.play();
+            this.audio.jetPackAudio.play();
         }
     }
 
@@ -302,7 +301,7 @@ export class Player {
             this.isFlying = false;
             this.timeFlying = 0;
             this.scene.remove(this.jetPack);
-            this.audio.jetpackAudio.stop();
+            this.audio.jetPackAudio.stop();
         }
 
         // Smooth lane transition (optional)

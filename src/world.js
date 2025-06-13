@@ -80,7 +80,7 @@ export class World {
         this._controls.update();
     }
 
-    handleKeyPress(animate, hud, audio, player) {
+    handleKeyPress(animate, hud, audio, player, plane) {
         window.addEventListener("keydown", (event) => {
             hud.updateScreen(audio.backgroundAudio, animate, this);
 
@@ -89,10 +89,12 @@ export class World {
                 player.lateralMove(-1);
             } else if (event.code === "ArrowRight") {
                 player.lateralMove(1);
-            } else if (event.code === "ArrowUp" || event.code === "Space") {
+            } else if (event.code === "ArrowUp") {
                 player.jump(audio.jumpAudio);
-            } else if (event.code == "ArrowDown") {
+            } else if (event.code === "ArrowDown") {
                 player.stopJump();
+            } else if (event.code === "Space" && plane.gunReady) {
+                plane.fireBullet();
             }
         });
     }

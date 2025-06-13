@@ -6,6 +6,7 @@ export class HUD {
         this.startScreen = document.getElementById("start-screen");
         this.gameOverScreen = document.getElementById("game-over-screen");
         this.finalScoreText = document.getElementById("final-score");
+
         this.score = 0;
         this.scoreDisplay = document.getElementById("score");
 
@@ -13,8 +14,10 @@ export class HUD {
         this.healthFill = document.getElementById("health-fill");
 
         this.maxJetPackFuel = 5;
-        this.jetPackBar = document.getElementById("jetPack-bar");
+        this.jetPackBar = document.getElementById("jetPack");
         this.jetPackFill = document.getElementById("jetPack-fill");
+
+        this.gunReadyText = document.getElementById("gunReady");
     }
 
     updateScreen(backgroundAudio, animate, world) {
@@ -42,10 +45,18 @@ export class HUD {
         if (fuel >= this.maxJetPackFuel) {
             this.jetPackBar.style.display = "none";
         } else {
-            this.jetPackBar.style.display = "block";
+            this.jetPackBar.style.display = "flex";
             const percentage =
                 ((this.maxJetPackFuel - fuel) / this.maxJetPackFuel) * 100;
             this.jetPackFill.style.width = percentage + "%";
+        }
+    }
+
+    updateGunReadyText(gunReady) {
+        if (gunReady) {
+            this.gunReadyText.style.display = "block";
+        } else {
+            this.gunReadyText.style.display = "none";
         }
     }
 

@@ -25,9 +25,15 @@ const player = new Player(
     hud.updateJetPackBar.bind(hud),
     hud.endGame.bind(hud)
 );
-const plane = new Plane(scene, road.tileWidth, skyTexture);
+const plane = new Plane(
+    scene,
+    audio,
+    road.tileWidth,
+    skyTexture,
+    hud.updateGunReadyText.bind(hud)
+);
 
-world.handleKeyPress(animate, hud, audio, player);
+world.handleKeyPress(animate, hud, audio, player, plane);
 
 function animate() {
     if (hud.isGameOver) return;
@@ -37,7 +43,7 @@ function animate() {
 
     road.update(elapsedSeconds);
     player.update(road);
-    plane.update(player.player);
+    plane.update(player.player, road, elapsedSeconds);
     hud.update(elapsedSeconds);
 
     controls.update();

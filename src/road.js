@@ -9,21 +9,21 @@ export class Road {
         this._tiles = [];
 
         this.easyMode = {
-            avgGapInterval: 10.0,
+            avgGapInterval: 1.0,
             avgJetPackInterval: 15.0,
-            avgObstaclesInterval: 5.0,
+            avgObstaclesInterval: 1.0,
         };
 
         this.mediumMode = {
-            avgGapInterval: 7.0,
+            avgGapInterval: 0.5,
             avgJetPackInterval: 20.0,
-            avgObstaclesInterval: 2.0,
+            avgObstaclesInterval: 0.5,
         };
 
         this.hardMode = {
-            avgGapInterval: 5.0,
+            avgGapInterval: 0.25,
             avgJetPackInterval: 25.0,
-            avgObstaclesInterval: 1.0,
+            avgObstaclesInterval: 0.25,
         };
 
         this.lastGapTime = 0;
@@ -135,7 +135,7 @@ export class Road {
     }
 
     createSampleJetPack() {
-        const jetpack = new THREE.Group();
+        const jetPack = new THREE.Group();
 
         const material = new THREE.MeshStandardMaterial({
             color: 0x555555,
@@ -167,12 +167,12 @@ export class Road {
             flame.position.set(0, -0.45, 0);
             thruster.add(flame);
 
-            jetpack.add(thruster);
+            jetPack.add(thruster);
         }
 
-        jetpack.position.y = this.tileHeight + 0.4;
+        jetPack.position.y = this.tileHeight + 0.4;
 
-        return jetpack;
+        return jetPack;
     }
 
     createLaserGate(x, z) {
@@ -270,10 +270,6 @@ export class Road {
             this.jetPackTile = Math.floor(Math.random() * 3);
         }
 
-        console.log(
-            elapsedSeconds - this.lastObstaclesTime,
-            this.nextObstaclesIn
-        );
         if (elapsedSeconds - this.lastObstaclesTime >= this.nextObstaclesIn) {
             this.isObstaclesFrame = true;
             this.lastObstaclesTime = elapsedSeconds;
@@ -401,6 +397,48 @@ export class Road {
                             handlePlayerHit(hitAudio);
                         }
                     }
+                }
+            });
+        });
+    }
+
+    checkBulletCollision(bulletBox, handleBulletHit) {
+        // Check collision between bullet and obstacles
+        this._tiles.forEach((row) => {
+            row.forEach((tile) => {
+                if (tile.userData.hasObstacle) {
+                    const obstacle = tile.userData.obstacle;
+                    obstacle.userData.box.setFromObject(obstacle);
+                    if (bulletBox.intersectsBox(obstacle.userData.box)) {
+                        if (!obstacle.userData.hit) {
+                            obstacle.userData.hit = true; // prevent multiple triggers
+                            // Flashing effect
+                            let flashCount = 0;
+                            const maxFlashes = 6;
+                            const flashInterval = 60; // ms
+                            const originalVisible = obstacle.visible;
+                            const flash = () => {
+                                obstacle.visible = !obstacle.visible;
+                                flashCount++;
+                                if (flashCount < maxFlashes) {
+                                    setTimeout(flash, flashInterval);
+                                } else {
+                                    obstacle.visible = originalVisible;
+                                    // Remove obstacle from scene and tile
+                                    this.scene.remove(obstacle);
+                                    tile.userData.hasObstacle = false;
+                                    tile.userData.obstacle = null;
+                                    handleBulletHit(obstacle);
+                                }
+                            };
+                            flash();
+                        }
+                    }
+                }
+
+                const tileBox = new THREE.Box3().setFromObject(tile);
+                if (bulletBox.intersectsBox(tileBox)) {
+                    handleBulletHit(tile);
                 }
             });
         });

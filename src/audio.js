@@ -9,7 +9,9 @@ export class Audio {
         this.jumpAudioPath = this.audioDir + "/jump.mp3";
         this.hitAudioPath = this.audioDir + "/hit.mp3";
         this.screamAudioPath = this.audioDir + "/scream.mp3";
-        this.jetpackAudioPath = this.audioDir + "/jetpack.mp3";
+        this.jetPackAudioPath = this.audioDir + "/jetPack.mp3";
+        this.gunReadyAudioPath = this.audioDir + "/gunReady.mp3";
+        this.gunShotAudioPath = this.audioDir + "/gunShot.mp3";
 
         this.loadAudio();
     }
@@ -45,11 +47,23 @@ export class Audio {
             this._screamAudio.setVolume(0.5);
         });
 
-        this._jetpackAudio = new THREE.Audio(listener);
-        audioLoader.load(this.jetpackAudioPath, (buffer) => {
-            this._jetpackAudio.setBuffer(buffer);
-            this._jetpackAudio.setLoop(true);
-            this._jetpackAudio.setVolume(0.5);
+        this._jetPackAudio = new THREE.Audio(listener);
+        audioLoader.load(this.jetPackAudioPath, (buffer) => {
+            this._jetPackAudio.setBuffer(buffer);
+            this._jetPackAudio.setLoop(true);
+            this._jetPackAudio.setVolume(0.5);
+        });
+
+        this._gunReadyAudio = new THREE.Audio(listener);
+        audioLoader.load(this.gunReadyAudioPath, (buffer) => {
+            this._gunReadyAudio.setBuffer(buffer);
+            this._gunReadyAudio.setVolume(1);
+        });
+
+        this._gunShotAudio = new THREE.Audio(listener);
+        audioLoader.load(this.gunShotAudioPath, (buffer) => {
+            this._gunShotAudio.setBuffer(buffer);
+            this._gunShotAudio.setVolume(0.5);
         });
     }
 
@@ -69,7 +83,15 @@ export class Audio {
         return this._hitAudio;
     }
 
-    get jetpackAudio() {
-        return this._jetpackAudio;
+    get jetPackAudio() {
+        return this._jetPackAudio;
+    }
+
+    get gunReadyAudio() {
+        return this._gunReadyAudio;
+    }
+
+    get gunShotAudio() {
+        return this._gunShotAudio;
     }
 }
